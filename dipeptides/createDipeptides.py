@@ -8,11 +8,10 @@ def createDipeptide(forcefield, res1, res2, var1, var2):
     """Use PDBFixer to create a dipeptide with specified residues and variants."""
     import pdbfixer
     fixer = pdbfixer.PDBFixer(filename='ala_ala.pdb')
-    if res1 != 'ALA' or res2 != 'ALA':
-        fixer.missingResidues = {}
-        fixer.applyMutations([f'ALA-2-{res1}', f'ALA-3-{res2}'], 'A')
-        fixer.findMissingAtoms()
-        fixer.addMissingAtoms()
+    fixer.missingResidues = {}
+    fixer.applyMutations([f'ALA-2-{res1}', f'ALA-3-{res2}'], 'A')
+    fixer.findMissingAtoms()
+    fixer.addMissingAtoms()
     modeller = app.Modeller(fixer.topology, fixer.positions)
     modeller.addHydrogens(forcefield=forcefield, variants=[None, var1, var2, None])
     return modeller.topology, modeller.positions
@@ -57,6 +56,7 @@ def createConformations(outputfile, forcefield, topology, positions, name):
     integrator = openmm.LangevinMiddleIntegrator(500*unit.kelvin, 1/unit.picosecond, 0.001*unit.picosecond)
     simulation = app.Simulation(topology, system, integrator, openmm.Platform.getPlatformByName('Reference'))
     simulation.context.setPositions(positions)
+    simulation.minimizeEnergy()
 
     # Use RDKit to generate 10 diverse starting points.  Run MD from each one
     # to generate a total of 100 high energy conformations.
