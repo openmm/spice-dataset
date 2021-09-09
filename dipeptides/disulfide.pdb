@@ -1,32 +1,78 @@
-REMARK   1 CREATED WITH OPENMM 7.6, 2021-09-02
-ATOM      1  N   CYS A   1       5.322   3.198   1.198  1.00  0.00           N  
-ATOM      2  H2  CYS A   1       4.270   3.193   1.046  1.00  0.00           H  
-ATOM      3  H3  CYS A   1       5.689   2.239   1.079  1.00  0.00           H  
-ATOM      4  CA  CYS A   1       5.339   3.632   2.627  1.00  0.00           C  
-ATOM      5  C   CYS A   1       3.875   3.729   3.084  1.00  0.00           C  
-ATOM      6  O   CYS A   1       3.670   3.978   4.291  1.00  0.00           O  
-ATOM      7  CB  CYS A   1       6.033   5.013   2.784  1.00  0.00           C  
-ATOM      8  SG  CYS A   1       7.814   4.960   2.400  1.00  0.00           S  
-ATOM      9  H   CYS A   1       5.772   3.895   0.583  1.00  0.00           H  
-ATOM     10  HA  CYS A   1       5.816   2.874   3.233  1.00  0.00           H  
-ATOM     11  HB2 CYS A   1       5.518   5.769   2.151  1.00  0.00           H  
-ATOM     12  HB3 CYS A   1       5.899   5.348   3.839  1.00  0.00           H  
-ATOM     13  OXT CYS A   1       2.974   3.450   2.242  1.00  0.00           O  
-TER      14      CYS A   1
-ATOM     15  N   CYS B   1      11.350   5.556   4.837  1.00  0.00           N  
-ATOM     16  H2  CYS B   1      11.881   5.670   3.958  1.00  0.00           H  
-ATOM     17  H3  CYS B   1      11.818   6.120   5.606  1.00  0.00           H  
-ATOM     18  CA  CYS B   1      10.040   6.274   4.798  1.00  0.00           C  
-ATOM     19  C   CYS B   1      10.137   7.438   5.798  1.00  0.00           C  
-ATOM     20  O   CYS B   1       9.183   8.246   5.823  1.00  0.00           O  
-ATOM     21  CB  CYS B   1       8.872   5.330   5.198  1.00  0.00           C  
-ATOM     22  SG  CYS B   1       8.595   3.985   3.997  1.00  0.00           S  
-ATOM     23  H   CYS B   1      11.235   4.572   5.132  1.00  0.00           H  
-ATOM     24  HA  CYS B   1       9.889   6.705   3.818  1.00  0.00           H  
-ATOM     25  HB2 CYS B   1       9.054   4.913   6.213  1.00  0.00           H  
-ATOM     26  HB3 CYS B   1       7.944   5.943   5.276  1.00  0.00           H  
-ATOM     27  OXT CYS B   1      11.223   7.587   6.427  1.00  0.00           O  
-TER      28      CYS B   1
-CONECT    8   22
-CONECT   22    8
+REMARK   1 CREATED WITH OPENMM 7.6, 2021-09-08
+HETATM    1  C   ACE A   1       5.249   2.543   0.503  1.00  0.00           C  
+HETATM    2  O   ACE A   1       4.734   1.720   1.249  1.00  0.00           O  
+HETATM    3  CH3 ACE A   1       5.663   2.150  -0.895  1.00  0.00           C  
+HETATM    4  H1  ACE A   1       6.733   2.314  -1.014  1.00  0.00           H  
+HETATM    5  H2  ACE A   1       5.438   1.095  -1.049  1.00  0.00           H  
+HETATM    6  H3  ACE A   1       5.113   2.749  -1.618  1.00  0.00           H  
+ATOM      7  N   CYS A   2       5.464   3.808   0.854  1.00  0.00           N  
+ATOM      8  H   CYS A   2       5.890   4.418   0.176  1.00  0.00           H  
+ATOM      9  CA  CYS A   2       5.192   4.370   2.183  1.00  0.00           C  
+ATOM     10  HA  CYS A   2       5.521   3.645   2.930  1.00  0.00           H  
+ATOM     11  C   CYS A   2       3.690   4.624   2.451  1.00  0.00           C  
+ATOM     12  O   CYS A   2       3.290   5.747   2.751  1.00  0.00           O  
+ATOM     13  CB  CYS A   2       6.041   5.638   2.357  1.00  0.00           C  
+ATOM     14  HB2 CYS A   2       5.717   6.374   1.621  1.00  0.00           H  
+ATOM     15  HB3 CYS A   2       5.850   6.057   3.346  1.00  0.00           H  
+ATOM     16  SG  CYS A   2       7.828   5.388   2.173  1.00  0.00           S  
+HETATM   17  N   NME A   3       2.852   3.589   2.314  1.00  0.00           N  
+HETATM   18  H   NME A   3       3.262   2.699   2.048  1.00  0.00           H  
+HETATM   19  C   NME A   3       1.408   3.655   2.532  1.00  0.00           C  
+HETATM   20  H1  NME A   3       0.991   4.511   1.999  1.00  0.00           H  
+HETATM   21  H2  NME A   3       1.203   3.772   3.598  1.00  0.00           H  
+HETATM   22  H3  NME A   3       0.932   2.742   2.172  1.00  0.00           H  
+TER      23      NME A   3
+HETATM   24  C   ACE B   1      12.189   5.998   4.353  1.00  0.00           C  
+HETATM   25  O   ACE B   1      12.423   7.081   3.831  1.00  0.00           O  
+HETATM   26  CH3 ACE B   1      13.265   4.941   4.430  1.00  0.00           C  
+HETATM   27  H1  ACE B   1      14.162   5.311   3.934  1.00  0.00           H  
+HETATM   28  H2  ACE B   1      13.486   4.729   5.474  1.00  0.00           H  
+HETATM   29  H3  ACE B   1      12.922   4.036   3.933  1.00  0.00           H  
+ATOM     30  N   CYS B   2      11.010   5.686   4.886  1.00  0.00           N  
+ATOM     31  H   CYS B   2      10.906   4.772   5.294  1.00  0.00           H  
+ATOM     32  CA  CYS B   2       9.826   6.554   4.878  1.00  0.00           C  
+ATOM     33  HA  CYS B   2       9.747   7.012   3.891  1.00  0.00           H  
+ATOM     34  C   CYS B   2       9.914   7.716   5.894  1.00  0.00           C  
+ATOM     35  O   CYS B   2       9.072   7.836   6.782  1.00  0.00           O  
+ATOM     36  CB  CYS B   2       8.579   5.682   5.090  1.00  0.00           C  
+ATOM     37  HB2 CYS B   2       8.641   5.223   6.077  1.00  0.00           H  
+ATOM     38  HB3 CYS B   2       7.695   6.322   5.083  1.00  0.00           H  
+ATOM     39  SG  CYS B   2       8.346   4.372   3.859  1.00  0.00           S  
+HETATM   40  N   NME B   3      10.949   8.557   5.783  1.00  0.00           N  
+HETATM   41  H   NME B   3      11.613   8.372   5.037  1.00  0.00           H  
+HETATM   42  C   NME B   3      11.186   9.705   6.655  1.00  0.00           C  
+HETATM   43  H1  NME B   3      12.051  10.270   6.304  1.00  0.00           H  
+HETATM   44  H2  NME B   3      11.366   9.363   7.675  1.00  0.00           H  
+HETATM   45  H3  NME B   3      10.309  10.355   6.654  1.00  0.00           H  
+TER      46      NME B   3
+CONECT    1    3    2    7
+CONECT    2    1
+CONECT    3    4    5    6    1
+CONECT    4    3
+CONECT    5    3
+CONECT    6    3
+CONECT    7    1
+CONECT   11   17
+CONECT   16   39
+CONECT   17   18   11   19
+CONECT   18   17
+CONECT   19   20   21   22   17
+CONECT   20   19
+CONECT   21   19
+CONECT   22   19
+CONECT   24   26   25   30
+CONECT   25   24
+CONECT   26   27   28   29   24
+CONECT   27   26
+CONECT   28   26
+CONECT   29   26
+CONECT   30   24
+CONECT   34   40
+CONECT   39   16
+CONECT   40   41   34   42
+CONECT   41   40
+CONECT   42   43   44   45   40
+CONECT   43   42
+CONECT   44   42
+CONECT   45   42
 END

@@ -3,23 +3,24 @@ import openmm.app as app
 import openmm.unit as unit
 import numpy as np
 import h5py
-from io import StringIO
 
 def createDipeptide(forcefield, res1, res2, var1, var2):
     """Use PDBFixer to create a dipeptide with specified residues and variants."""
     import pdbfixer
     fixer = pdbfixer.PDBFixer(filename='ala_ala.pdb')
-    fixer.missingResidues = {}
-    fixer.applyMutations([f'ALA-1-{res1}', f'ALA-2-{res2}'], 'A')
-    fixer.findMissingAtoms()
-    fixer.addMissingAtoms()
+    if res1 != 'ALA' or res2 != 'ALA':
+        fixer.missingResidues = {}
+        fixer.applyMutations([f'ALA-2-{res1}', f'ALA-3-{res2}'], 'A')
+        fixer.findMissingAtoms()
+        fixer.addMissingAtoms()
     modeller = app.Modeller(fixer.topology, fixer.positions)
-    modeller.addHydrogens(forcefield=forcefield, variants=[var1, var2])
+    modeller.addHydrogens(forcefield=forcefield, variants=[None, var1, var2, None])
     return modeller.topology, modeller.positions
 
 def convertToRdkit(simulation):
     """Create a RDKit Mol object from an OpenMM simulation."""
     from rdkit import Chem
+    from io import StringIO
     io = StringIO()
     positions = simulation.context.getState(getPositions=True).getPositions()
     app.PDBFile.writeFile(simulation.topology, positions, io)
@@ -54,7 +55,7 @@ def createConformations(outputfile, forcefield, topology, positions, name):
     print(f'Generating {name}')
     system = forcefield.createSystem(topology, constraints=None, rigidWater=False)
     integrator = openmm.LangevinMiddleIntegrator(500*unit.kelvin, 1/unit.picosecond, 0.001*unit.picosecond)
-    simulation = app.Simulation(topology, system, integrator)
+    simulation = app.Simulation(topology, system, integrator, openmm.Platform.getPlatformByName('Reference'))
     simulation.context.setPositions(positions)
 
     # Use RDKit to generate 10 diverse starting points.  Run MD from each one
@@ -64,6 +65,8 @@ def createConformations(outputfile, forcefield, topology, positions, name):
     states = []
     for pos in startPositions:
         simulation.context.setPositions(pos)
+        simulation.minimizeEnergy()
+        simulation.context.setVelocitiesToTemperature(500*unit.kelvin)
         for i in range(10):
             simulation.step(10000)
             states.append(simulation.context.getState(getPositions=True))
@@ -90,22 +93,20 @@ def saveToFile(outputfile, simulation, states, name):
         mol.add_conformer(state.getPositions(asNumpy=True))
     mol = mol.canonical_order_atoms()
     smiles = mol.to_smiles(isomeric=True, explicit_hydrogens=True, mapped=True)
-    sdf = StringIO()
-    mol.to_file(sdf, 'SDF')
     conformations = [c.value_in_unit(unit.nanometers) for c in mol.conformers]
     group = outputfile.create_group(name)
     group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
-    group.create_dataset('sdf', data=[sdf.getvalue()], dtype=h5py.string_dtype())
-    group.create_dataset('conformations', data=np.array(conformations), dtype=np.float32)
+    ds = group.create_dataset('conformations', data=np.array(conformations), dtype=np.float32)
+    ds.attrs['units'] = 'nanometers'
 
 # Create the molecules.
 
-forcefield = app.ForceField('charmm36.xml')
-outputfile = h5py.File('molecules.hdf5', 'w')
+forcefield = app.ForceField('amber14-all.xml')
+outputfile = h5py.File('dipeptides.hdf5', 'w')
 pdb = app.PDBFile('disulfide.pdb')
 createConformations(outputfile, forcefield, pdb.topology, pdb.positions, 'Disulfide')
-residues = ['ALA', 'ASN', 'CYS', 'CYS', 'GLU', 'GLU', 'HIS', 'HIS', 'HIS', 'HIS', 'LEU', 'MET', 'PRO', 'THR', 'TYR', 'ARG', 'ASP', 'ASP', 'GLN', 'GLY', 'ILE', 'LYS', 'LYS', 'PHE', 'SER', 'TRP', 'VAL']
-variants = [None,  None,  'CYS', 'CYX', 'GLH', 'GLU', 'HID', 'HIE', 'HIN', 'HIP', None,  None,  None,  None,  None,  None,  'ASH', 'ASP', None,  None,  None,  'LYN', 'LYS', None,  None,  None,  None]
+residues = ['ALA', 'ASN', 'CYS', 'CYS', 'GLU', 'GLU', 'HIS', 'HIS', 'HIS', 'LEU', 'MET', 'PRO', 'THR', 'TYR', 'ARG', 'ASP', 'ASP', 'GLN', 'GLY', 'ILE', 'LYS', 'LYS', 'PHE', 'SER', 'TRP', 'VAL']
+variants = [None,  None,  'CYS', 'CYX', 'GLH', 'GLU', 'HID', 'HIE', 'HIP', None,  None,  None,  None,  None,  None,  'ASH', 'ASP', None,  None,  None,  'LYN', 'LYS', None,  None,  None,  None]
 for res1, var1 in zip(residues, variants):
     name1 = res1 if var1 is None else var1
     for res2, var2 in zip(residues, variants):
