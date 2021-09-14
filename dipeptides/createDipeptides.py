@@ -36,18 +36,26 @@ def convertToOpenFF(simulation, charges):
 
     from openff.toolkit.topology import Molecule
     mol = Molecule()
+    chargedAtoms = []
     for i, atom in enumerate(simulation.topology.atoms()):
         obatom = obmol.GetAtom(i+1)
         charge = 0
         if atom.index in charges:
             charge = charges[atom.index]
+            chargedAtoms.append(obatom)
         stereo = None
         if facade.HasTetrahedralStereo(obatom.GetId()):
             stereo = ('S', 'R')[facade.GetTetrahedralStereo(obatom.GetId()).GetConfig().winding]
         mol.add_atom(atom.element.atomic_number, charge, obatom.IsAromatic(), stereo, atom.name)
     for i in range(obmol.NumBonds()):
         bond = obmol.GetBond(i)
-        mol.add_bond(bond.GetBeginAtomIdx()-1, bond.GetEndAtomIdx()-1, bond.GetBondOrder(), bond.IsAromatic())
+        order = bond.GetBondOrder()
+        if (bond.GetBeginAtom().GetImplicitHCount() != 0 and bond.GetEndAtom() in chargedAtoms) or (bond.GetEndAtom().GetImplicitHCount() != 0 and bond.GetBeginAtom() in chargedAtoms):
+            # Workaround for a case that comes up in HIP.  OpenBabel infers an implicit hydrogen
+            # on CE1, when instead we want it to infer a +1 charge on ND1, leading to the wrong
+            # order for the bond connecting them.
+            order += 1
+        mol.add_bond(bond.GetBeginAtomIdx()-1, bond.GetEndAtomIdx()-1, order, bond.IsAromatic())
 
     # Verify that the total charge is correct.
 
