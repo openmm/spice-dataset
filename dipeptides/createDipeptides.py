@@ -39,10 +39,19 @@ def convertToOpenFF(simulation, charges):
     chargedAtoms = []
     for i, atom in enumerate(simulation.topology.atoms()):
         obatom = obmol.GetAtom(i+1)
+
+        # Find the formal charge.  In some cases, the PDB file isn't sufficient to determine
+        # which atom the charge goes on.  For example in GLU, nothing in the PDB file distinguishes
+        # OE1 and OE2.  In these cases we list both atoms but mark them as not required.  We can identify
+        # which atom OpenBabel selected because it will have recorded an implicit H (for negative sites)
+        # or a valence of 4 (for positive nitrogens).
+
         charge = 0
         if atom.index in charges:
-            charge = charges[atom.index]
-            chargedAtoms.append(obatom)
+            c, required = charges[atom.index]
+            if required or (c < 0 and obatom.GetImplicitHCount() == 1) or (c > 0 and obatom.GetTotalValence() > 3):
+                charge = c
+                chargedAtoms.append(obatom)
         stereo = None
         if facade.HasTetrahedralStereo(obatom.GetId()):
             stereo = ('S', 'R')[facade.GetTetrahedralStereo(obatom.GetId()).GetConfig().winding]
@@ -100,7 +109,9 @@ def createConformations(outputfile, forcefield, topology, positions, name, charg
         simulation.context.setVelocitiesToTemperature(500*unit.kelvin)
         for i in range(10):
             simulation.step(10000)
-            states.append(simulation.context.getState(getPositions=True))
+            state = simulation.context.getState(getPositions=True, getEnergy=True)
+            if state.getPotentialEnergy() < 1e4*unit.kilojoules_per_mole:
+                states.append(state)
 
     # Select 25 that are most different from each other.
 
@@ -130,6 +141,12 @@ def saveToFile(outputfile, mol, states, name):
     ds = group.create_dataset('conformations', data=np.array(conformations), dtype=np.float32)
     ds.attrs['units'] = 'nanometers'
 
+    # As a sanity check, make sure the SMILES string doesn't have any radicals.
+
+    from rdkit import Chem
+    rdmol = Chem.MolFromSmiles(smiles)
+    assert all(atom.GetNumRadicalElectrons() == 0 for atom in rdmol.GetAtoms())
+
 # Define the residue variants we will include.
 
 Residue = namedtuple('Residue', ['name', 'variant', 'charges'])
@@ -138,25 +155,25 @@ residues = [
     Residue('ALA', None, {}),
     Residue('ASN', None, {}),
     Residue('CYS', 'CYS', {}),
-    Residue('CYS', 'CYX', {'SG':-1}),
+    Residue('CYS', 'CYX', {'SG':[-1,True]}),
     Residue('GLU', 'GLH', {}),
-    Residue('GLU', 'GLU', {'OE1':-1}),
+    Residue('GLU', 'GLU', {'OE1':[-1,False], 'OE2':[-1,False]}),
     Residue('HIS', 'HID', {}),
     Residue('HIS', 'HIE', {}),
-    Residue('HIS', 'HIP', {'ND1':1}),
+    Residue('HIS', 'HIP', {'ND1':[1,True]}),
     Residue('LEU', None, {}),
     Residue('MET', None, {}),
     Residue('PRO', None, {}),
     Residue('THR', None, {}),
     Residue('TYR', None, {}),
-    Residue('ARG', None, {'NH1':1}),
+    Residue('ARG', None, {'NH1':[1,False], 'NH2':[1,False]}),
     Residue('ASP', 'ASH', {}),
-    Residue('ASP', 'ASP', {'OD1':-1}),
+    Residue('ASP', 'ASP', {'OD1':[-1,False], 'OD2':[-1,False]}),
     Residue('GLN', None, {}),
     Residue('GLY', None, {}),
     Residue('ILE', None, {}),
     Residue('LYS', 'LYN', {}),
-    Residue('LYS', 'LYS', {'NZ':1}),
+    Residue('LYS', 'LYS', {'NZ':[1,True]}),
     Residue('PHE', None, {}),
     Residue('SER', None, {}),
     Residue('TRP', None, {}),
@@ -180,4 +197,10 @@ for res1 in residues:
                 charges[atom.index] = res1.charges[atom.name]
             elif atom.residue.index == 2 and atom.name in res2.charges:
                 charges[atom.index] = res2.charges[atom.name]
-        createConformations(outputfile, forcefield, topology, positions, f'{name1}-{name2}', charges)
+        try:
+            createConformations(outputfile, forcefield, topology, positions, f'{name1}-{name2}', charges)
+        except:
+            # Very occasionally we get non-reproducible exceptions from OpenFF.  Possibly these are
+            # caused by bad initial stuctures from PDBFixer?  When this happens, just repeat it.
+            topology, positions = createDipeptide(forcefield, res1.name, res2.name, res1.variant, res2.variant)
+            createConformations(outputfile, forcefield, topology, positions, f'{name1}-{name2}', charges)
