@@ -8,6 +8,8 @@ class Molecule(object):
         self.sid = sid
         self.smiles = smiles
         mol = Chem.MolFromSmiles(smiles)
+        if any(a.GetSymbol() in ('B', 'Si') for a in mol.GetAtoms()):
+            raise ValueError('Skipping molecules with B or Si')
         mol = Chem.AddHs(mol)
         self.fingerprint = AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024)
 
@@ -35,8 +37,11 @@ with open('sorted.txt', 'w') as output:
 
     # Repeatedly add the molecule least similar to anything so far.
 
+    count = 0
     while len(fp) > 0:
         i = np.argmin(maxSimilarity)
+        if count%1000 == 0:
+            print(count, len(fp), maxSimilarity[i])
         m = mols[i]
         del mols[i]
         del fp[i]
@@ -44,3 +49,13 @@ with open('sorted.txt', 'w') as output:
         output.write(f'{m.sid}\t{m.smiles}')
         similarity = DataStructs.BulkTanimotoSimilarity(m.fingerprint, fp)
         maxSimilarity = np.maximum(similarity, maxSimilarity)
+        if count%1000 == 0:
+            # Remove any molecule that is too similar to one we have already added.  Including them
+            # wouldn't significantly expand our coverage of chemical space.
+
+            ones = (maxSimilarity >= 0.9).nonzero()[0]
+            for j in reversed(ones):
+                del mols[j]
+                del fp[j]
+            maxSimilarity = np.delete(maxSimilarity, ones)
+        count += 1

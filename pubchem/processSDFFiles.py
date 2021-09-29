@@ -1,7 +1,7 @@
 from rdkit import Chem
 import os
 
-elements = set(['B', 'Br', 'C', 'Ca', 'Cl', 'F', 'H', 'I', 'K', 'Li', 'Mg', 'N', 'Na', "O", 'P', 'S', 'Si'])
+elements = set(['B', 'Br', 'C', 'Cl', 'F', 'H', 'I', 'N', 'O', 'P', 'S', 'Si'])
 
 for filename in os.listdir('sources'):
     if filename.endswith('.sdf'):
