@@ -25,11 +25,11 @@ def filterByRMSD(states, topology):
 def createConformations(outputfile, forcefield, smiles, sid):
     """Generate the conformations for a molecule and save them to disk."""
     print(f'Generating {index}: {smiles}')
-    mol = Molecule.from_smiles(smiles, allow_undefined_stereo=True)
-    fftop = Topology()
-    fftop.add_molecule(mol)
-    mmtop = fftop.to_openmm()
     try:
+        mol = Molecule.from_smiles(smiles, allow_undefined_stereo=True)
+        fftop = Topology()
+        fftop.add_molecule(mol)
+        mmtop = fftop.to_openmm()
         system = forcefield.create_openmm_system(fftop)
     except:
         print('  failed to parametrize')
@@ -81,11 +81,15 @@ def createConformations(outputfile, forcefield, smiles, sid):
 
 def saveToFile(outputfile, mol, states, name):
     """Save a molecule and its conformations to a HDF5 file."""
-    mol._conformers = None
-    for state in states:
-        mol.add_conformer(state.getPositions(asNumpy=True))
-    mol = mol.canonical_order_atoms()
-    smiles = mol.to_smiles(isomeric=True, explicit_hydrogens=True, mapped=True)
+    try:
+        mol._conformers = None
+        for state in states:
+            mol.add_conformer(state.getPositions(asNumpy=True))
+        mol = mol.canonical_order_atoms()
+        smiles = mol.to_smiles(isomeric=True, explicit_hydrogens=True, mapped=True)
+    except:
+        print('  exception generating canonical SMILES')
+        return
     conformations = [c.value_in_unit(unit.nanometers) for c in mol.conformers]
     conformations = [c-np.average(c, axis=0) for c in conformations]
     group = outputfile.create_group(name)
