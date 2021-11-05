@@ -65,6 +65,9 @@ def createConformations(outputfile, forcefield, smiles, sid):
 
     # Select 25 that are most different from each other.
 
+    if len(states) < 25:
+        print('  failed to generate states')
+        return
     states = filterByRMSD(states, mmtop)
 
     # Create a nearby, lower energy conformation from each one.
