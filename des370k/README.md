@@ -1,3 +1,5 @@
 This collection contains all the dimer conformations from the DES370K dataset, except for the ones containing noble gas atoms which are omitted as out of scope.  Before running the script, you must download the dataset from https://doi.org/10.6084/m9.figshare.c.5070644.  The dataset describes each sample using SMILES strings for the monomers, and lists the full atomic coordinates for each conformation.  Because the SMILES strings have implicit hydrogens, the exact mapping of coordinates to atoms is ambiguous.  To resolve this, the SDFS directory contains SDF files provided by Alexander Donchev, one for each monomer, listing all atoms in the order used by the dataset.
 
+There also is a collection of 50 conformations for each monomer that has multiple atoms (378 molecules).
+
 The output file was generated using RDKit 2020.09.3 and OpenFF Toolkit 0.10.0.
