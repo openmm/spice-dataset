@@ -1,0 +1,2 @@
+This collection contains pairs of monatomic ions.  It includes all 28 possible pairs of Br-, Cl-, F-, I-, K+, Li+,
+and Na+.  Each pair includes all separation distances between 2.5 and 7.5 A in increments of 0.1 A.
