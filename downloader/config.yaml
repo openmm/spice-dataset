@@ -9,9 +9,10 @@ subsets:
   - 'SPICE PubChem Set 1 Single Points Dataset v1.2'
   - 'SPICE PubChem Set 2 Single Points Dataset v1.2'
   - 'SPICE PubChem Set 3 Single Points Dataset v1.2'
-  - 'SPICE PubChem Set 4 Single Points Dataset v1.0'
-  - 'SPICE PubChem Set 5 Single Points Dataset v1.0'
-  - 'SPICE PubChem Set 6 Single Points Dataset v1.0'
+  - 'SPICE PubChem Set 4 Single Points Dataset v1.2'
+  - 'SPICE PubChem Set 5 Single Points Dataset v1.2'
+  - 'SPICE PubChem Set 6 Single Points Dataset v1.2'
+  - 'SPICE Ion Pairs Single Points Dataset v1.1'
 
 # This section specifies which data values to include.  The following are all of the most common choices.  Comment
 # out ones you do not want.  Other less common values are also available.  For a full list of available values,
