@@ -7,13 +7,50 @@ import yaml
 
 # Reference energies computed with Psi4 1.5 wB97M-D3BJ/def2-TZVPPD.
 
-atom_energy = {('Br', -1): -2574.2451510945853, ('Br', 0): -2574.1167240829964, ('C', -1): -37.91424135791358, ('C', 0): -37.87264507233593,
-               ('C', 1): -37.45349214963933, ('Ca', 2): -676.9528465198214, ('Cl', -1): -460.3350243496703, ('Cl', 0): -460.1988762285739,
-               ('F', -1): -99.91298732343974, ('F', 0): -99.78611622985483, ('H', 0): -0.4987605100487341, ('I', -1): -297.8813829975981,
-               ('I', 0): -297.76228914445625, ('K', 1): -599.8025677513111, ('Li', 1): -7.285254714046546, ('Mg', 2): -199.2688420040449,
-               ('N', -1): -54.602291095426494, ('N', 0): -54.62327513368922, ('N', 1): -54.08594142587869, ('Na', 1): -162.11366478783253,
-               ('O', -1): -75.17101657391741, ('O', 0): -75.11317840410095, ('O', 1): -74.60241514396725, ('P', 0): -341.3059197024934,
-               ('P', 1): -340.9258392474849, ('S', -1): -398.2405387031612, ('S', 0): -398.1599636677874, ('S', 1): -397.7746615977658}
+atom_energy = {'Br': {-1: -2574.2451510945853, 0: -2574.1167240829964},
+               'C': {-1: -37.91424135791358, 0: -37.87264507233593, 1: -37.45349214963933},
+               'Ca': {2: -676.9528465198214},
+               'Cl': {-1: -460.3350243496703, 0: -460.1988762285739},
+               'F': {-1: -99.91298732343974, 0: -99.78611622985483},
+               'H': {-1: -0.5027370838721259, 0: -0.4987605100487531, 1: 0.0},
+               'I': {-1: -297.8813829975981, 0: -297.76228914445625},
+               'K': {1: -599.8025677513111},
+               'Li': {1: -7.285254714046546},
+               'Mg': {2: -199.2688420040449},
+               'N': {-1: -54.602291095426494, 0: -54.62327513368922, 1: -54.08594142587869},
+               'Na': {1: -162.11366478783253},
+               'O': {-1: -75.17101657391741, 0: -75.11317840410095, 1: -74.60241514396725},
+               'P': {0: -341.3059197024934, 1: -340.9258392474849},
+               'S': {-1: -398.2405387031612, 0: -398.1599636677874, 1: -397.7746615977658}}
+default_charge = {}
+for symbol in atom_energy:
+    energies = [(energy, charge) for charge, energy in atom_energy[symbol].items()]
+    default_charge[symbol] = sorted(energies)[0][1]
+
+# Given a SMILES string, compute the reference energy of the atoms when fully separated.
+
+def compute_reference_energy(smiles):
+    rdmol = Chem.MolFromSmiles(smiles, sanitize=False)
+    total_charge = sum(atom.GetFormalCharge() for atom in rdmol.GetAtoms())
+    symbol = [atom.GetSymbol() for atom in rdmol.GetAtoms()]
+    charge = [default_charge[s] for s in symbol]
+    delta = np.sign(total_charge-sum(charge))
+    while delta != 0:
+        best_index = -1
+        best_energy = None
+        for i in range(len(symbol)):
+            s = symbol[i]
+            e = atom_energy[s]
+            new_charge = charge[i]+delta
+            if new_charge in e:
+                if best_index == -1 or e[new_charge]-e[charge[i]] < best_energy:
+                    best_index = i
+                    best_energy = e[new_charge]-e[charge[i]]
+        charge[best_index] += delta
+        delta = np.sign(total_charge - sum(charge))
+    return sum(atom_energy[s][c] for s, c in zip(symbol, charge))
+
+# Process the configuration file and download data.
 
 with open('config.yaml') as input:
     config = yaml.safe_load(input.read())
@@ -44,8 +81,7 @@ for subset in config['subsets']:
         molecules = mols_by_name[name]
         qcvars = [r.extras['qcvars'] for r in group_recs]
         smiles = molecules[0].extras['canonical_isomeric_explicit_hydrogen_mapped_smiles']
-        rdmol = Chem.MolFromSmiles(smiles, sanitize=False)
-        ref_energy = sum(atom_energy[(atom.GetSymbol(), atom.GetFormalCharge())] for atom in rdmol.GetAtoms())
+        ref_energy = compute_reference_energy(smiles)
         group = outputfile.create_group(name)
         group.create_dataset('subset', data=[subset], dtype=h5py.string_dtype())
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
