@@ -82,6 +82,7 @@ for subset in config['subsets']:
         qcvars = [r.extras['qcvars'] for r in group_recs]
         smiles = molecules[0].extras['canonical_isomeric_explicit_hydrogen_mapped_smiles']
         ref_energy = compute_reference_energy(smiles)
+        name = name.replace('/', '')  # Remove stereochemistry markers that h5py interprets as path separators
         group = outputfile.create_group(name)
         group.create_dataset('subset', data=[subset], dtype=h5py.string_dtype())
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
