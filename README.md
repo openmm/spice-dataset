@@ -4,9 +4,9 @@ SPICE (Small-Molecule/Protein Interaction Chemical Energies) is a collection of 
 training potential functions.  The emphasis is particularly on simulating drug-like small molecules interacting
 with proteins.  It is designed to achieve the following goals.
 
-- **Cover a wide range of chemical space**.  It includes 17 elements and a wide range of chemical groups.
-  It includes charged and polar molecules as well as neutral ones.  It is designed to sample a wide range of
-  both covalent and non-covalent interactions.
+- **Cover a wide range of chemical space**.  It includes 15 elements (H, Li, C, N, O, F, Na, Mg, P, S, Cl, K, Ca, Br, I)
+  and a wide range of chemical groups.  It includes charged and polar molecules as well as neutral ones.  It is
+  designed to sample a wide range of both covalent and non-covalent interactions.
 - **Cover a wide range of conformations**.  It includes both low and high energy conformations.  It is
   designed to sample all regions of configuration space that are likely to be encountered in typical simulations.
 - **Include forces as well as energies**.  Many datasets include only energies, not forces.  SPICE includes
