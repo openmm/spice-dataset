@@ -5,6 +5,17 @@ import numpy as np
 import h5py
 import yaml
 
+# Units for a variety of fields that can be downloaded.
+
+units = {'dft_total_energy': 'hartree',
+         'dft_total_gradient': 'hartree/bohr',
+         'mbis_charges': 'elementary_charge',
+         'mbis_dipoles': 'elementary_charge*bohr',
+         'mbis_quadrupoles': 'elementary_charge*bohr^2',
+         'mbis_octupoles': 'elementary_charge*bohr^3',
+         'scf_dipole': 'elementary_charge*bohr',
+         'scf_quadrupole': 'elementary_charge*bohr^2'}
+
 # Reference energies computed with Psi4 1.5 wB97M-D3BJ/def2-TZVPPD.
 
 atom_energy = {'Br': {-1: -2574.2451510945853, 0: -2574.1167240829964},
@@ -87,11 +98,15 @@ for subset in config['subsets']:
         group.create_dataset('subset', data=[subset], dtype=h5py.string_dtype())
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
         group.create_dataset("atomic_numbers", data=molecules[0].atomic_numbers, dtype=np.int16)
-        group.create_dataset('conformations', data=np.array([m.geometry for m in molecules]), dtype=np.float32)
-        group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float32)
+        ds = group.create_dataset('conformations', data=np.array([m.geometry for m in molecules]), dtype=np.float32)
+        ds.attrs['units'] = 'bohr'
+        ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float32)
+        ds.attrs['units'] = 'hartree'
         for value in config['values']:
             key = value.lower().replace(' ', '_')
             try:
-                group.create_dataset(key, data=np.array([vars[value] for vars in qcvars]), dtype=np.float32)
+                ds = group.create_dataset(key, data=np.array([vars[value] for vars in qcvars]), dtype=np.float32)
+                if key in units:
+                    ds.attrs['units'] = units[key]
             except KeyError:
                 pass
