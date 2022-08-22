@@ -65,6 +65,10 @@ def compute_reference_energy(smiles):
 
 with open('config.yaml') as input:
     config = yaml.safe_load(input.read())
+if 'max_force' in config:
+    max_force = float(config['max_force'])
+else:
+    max_force = None
 client = FractalClient()
 outputfile = h5py.File('SPICE.hdf5', 'w')
 for subset in config['subsets']:
@@ -98,6 +102,11 @@ for subset in config['subsets']:
         group.create_dataset('subset', data=[subset], dtype=h5py.string_dtype())
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
         group.create_dataset("atomic_numbers", data=molecules[0].atomic_numbers, dtype=np.int16)
+        if max_force is not None:
+            force = np.array([vars['DFT TOTAL GRADIENT'] for vars in qcvars])
+            samples = [i for i in range(len(molecules)) if np.max(np.abs(force[i])) <= max_force]
+            molecules = [molecules[i] for i in samples]
+            qcvars = [qcvars[i] for i in samples]
         ds = group.create_dataset('conformations', data=np.array([m.geometry for m in molecules]), dtype=np.float32)
         ds.attrs['units'] = 'bohr'
         ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float32)
