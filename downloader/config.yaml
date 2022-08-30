@@ -28,3 +28,8 @@ values:
   - 'SCF QUADRUPOLE'
   - 'WIBERG LOWDIN INDICES'
   - 'MAYER INDICES'
+
+# This specifies a cutoff on forces.  A sample will be skipped if any component of the force on any atom
+# is larger than this value (in hartree/bohr).  Comment out this line to include all samples regardless of
+# force magnitude.
+max_force: 1.0
