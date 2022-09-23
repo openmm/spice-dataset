@@ -51,5 +51,11 @@ It provides a programmatic API for querying and accessing data.
 
 ## Citing The Dataset
 
-A manuscript describing the SPICE dataset is currently in preparation.  Watch this space!  A link will be
-added here once it is available.
+Please cite this manuscript for papers that use the SPICE dataset:
+
+Peter Eastman, Pavan Kumar Behara, David L. Dotson, Raimondas Galvelis, John E. Herr, Josh T. Horton, Yuezhi Mao,
+John D. Chodera, Benjamin P. Pritchard, Yuanqing Wang, Gianni De Fabritiis, and Thomas E. Markland.  "SPICE, A Dataset
+of Drug-like Molecules and Peptides for Training Machine Learning Potentials."  https://doi.org/10.48550/arXiv.2209.10702 (2022).
+
+In addition, Zenodo automatically generates a DOI for every release of the dataset, which can be found on the Releases
+page.  It can be cited along with the above paper if you want to cite a particular version of the dataset.
