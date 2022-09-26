@@ -32,6 +32,19 @@ They include the following.
   These provide sampling of a wide variety of non-covalent interactions.
 - **Ion pairs**.  These provide further sampling of Coulomb interactions over a range of distances.
 
+This table summarizes the content of each subset: the number of molecules/clusters it contains, the total number of
+conformations, the range of sizes spanned by the molecules/clusters, and the list of elements that appear in the subset.
+
+|Subset|Molecules|Conformations|Atoms|Elements|
+|---|---|---|---|---|
+|Dipeptides|677|33850|26–60|H, C, N, O, S|
+|Solvated Amino Acids|26|1300|79–96|H, C, N, O, S|
+|DES370K Dimers|3490|345676|2–34|H, Li, C, N, O, F, Na, Mg, P, S, Cl, K, Ca, Br, I|
+|DES370K Monomers|374|18700|3–22|H, C, N, O, F, P, S, Cl, Br, I|
+|PubChem|14643|731856|3–50|H, C, N, O, F, P, S, Cl, Br, I|
+|Ion Pairs|28|1426|2|Li, F, Na, Cl, K, Br, I|
+|Total|19238|1132808|2–96|H, Li, C, N, O, F, Na, Mg, P, S, Cl, K, Ca, Br, I|
+
 ## Getting The Data
 
 This repository contains scripts and data files used in creating the dataset.  The SPICE dataset itself
