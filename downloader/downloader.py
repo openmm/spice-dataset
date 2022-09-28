@@ -77,7 +77,10 @@ for subset in config['subsets']:
     print('Processing', subset)
     ds = client.get_collection('Dataset', subset)
     all_molecules = ds.get_molecules()
-    recs = ds.get_records(method='wb97m-d3bj', basis='def2-tzvppd', program='psi4', keywords='spice_default')
+    if subset == "SPICE DES370K Single Points Dataset Supplement v1.0":
+        recs = ds.get_records(method='wb97m-d3bj', basis='def2-tzvppd', program='psi4', keywords='spice_default_no_mbis')
+    else:
+        recs = ds.get_records(method='wb97m-d3bj', basis='def2-tzvppd', program='psi4', keywords='spice_default') 
     recs_by_name = defaultdict(list)
     mols_by_name = defaultdict(list)
     for i in range(len(recs)):
