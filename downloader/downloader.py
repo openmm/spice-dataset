@@ -77,8 +77,7 @@ for subset in config['subsets']:
     print('Processing', subset)
     ds = client.get_collection('Dataset', subset)
     all_molecules = ds.get_molecules()
-    spec = ds.list_records().iloc[0].to_dict()
-    recs = ds.get_records(method=spec['method'], basis=spec['basis'], program=spec['program'], keywords=spec['keywords'])
+    recs = ds.get_records(method='wb97m-d3bj', basis='def2-tzvppd', program='psi4', keywords='spice_default')
     recs_by_name = defaultdict(list)
     mols_by_name = defaultdict(list)
     for i in range(len(recs)):
