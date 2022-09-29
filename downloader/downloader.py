@@ -77,8 +77,11 @@ for subset in config['subsets']:
     print('Processing', subset)
     ds = client.get_collection('Dataset', subset)
     all_molecules = ds.get_molecules()
-    spec = ds.list_records().iloc[0].to_dict()
-    recs = ds.get_records(method=spec['method'], basis=spec['basis'], program=spec['program'], keywords=spec['keywords'])
+    for row in ds.list_records().iloc:
+        spec = row.to_dict()
+        if spec['method'] == 'wb97m-d3bj':
+            recs = ds.get_records(method=spec['method'], basis=spec['basis'], program=spec['program'], keywords=spec['keywords'])
+            break
     recs_by_name = defaultdict(list)
     mols_by_name = defaultdict(list)
     for i in range(len(recs)):
