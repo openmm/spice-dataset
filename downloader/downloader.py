@@ -112,12 +112,13 @@ for subset in config['subsets']:
             qcvars = [qcvars[i] for i in samples]
         ds = group.create_dataset('conformations', data=np.array([m.geometry for m in molecules]), dtype=np.float32)
         ds.attrs['units'] = 'bohr'
-        ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float32)
+        ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float64)
         ds.attrs['units'] = 'hartree'
         for value in config['values']:
             key = value.lower().replace(' ', '_')
             try:
-                ds = group.create_dataset(key, data=np.array([vars[value] for vars in qcvars]), dtype=np.float32)
+                dtype = np.float64 if 'energy' in key else np.float32
+                ds = group.create_dataset(key, data=np.array([vars[value] for vars in qcvars]), dtype=dtype)
                 if key in units:
                     ds.attrs['units'] = units[key]
             except KeyError:
