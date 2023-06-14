@@ -118,4 +118,4 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
 outputfile = h5py.File('dipeptides.hdf5', 'w')
 for future in futures:
     positions, energies, formation_energies, grads, mol, name = future.result()
-    save_to_file(outputfile, mol, positions, energies, formation_energies, grads, name)
+    save_to_file(outputfile, mol, positions, energies, formation_energies, grads, name, 'Dipeptides')

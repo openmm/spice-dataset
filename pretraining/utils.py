@@ -134,12 +134,12 @@ def convert_to_openff(simulation, charges):
     assert charge == mol.total_charge.m
     return mol
 
-def save_to_file(outputfile, mol, positions, energies, formation_energies, grads, name):
-    """Save a molecule and its conformations to a HDF5 file."""
+def save_to_file(outputfile, mol, positions, energies, formation_energies, grads, name, subset):
+    """Save a molecule and its conformers to a HDF5 file."""
     print(f'Saving {name}')
     smiles = mol.to_smiles(isomeric=True, explicit_hydrogens=True, mapped=True)
     group = outputfile.create_group(name)
-    group.create_dataset('subset', data=['Dipeptides'], dtype=h5py.string_dtype())
+    group.create_dataset('subset', data=[subset], dtype=h5py.string_dtype())
     group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
     group.create_dataset('atomic_numbers', data=[atom.atomic_number for atom in mol.atoms], dtype=np.int16)
     ds = group.create_dataset('conformations', data=np.array(positions), dtype=np.float32)
