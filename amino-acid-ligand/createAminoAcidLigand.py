@@ -10,6 +10,7 @@ import numpy as np
 import h5py
 from collections import defaultdict
 from io import StringIO
+from concurrent.futures import ProcessPoolExecutor
 import logging
 import os
 import tempfile
@@ -96,7 +97,7 @@ def createLigandModel(pdb, ligand, ligandPdb):
     modeller.addHydrogens()
     return modeller
 
-def findNeighbors(test_atoms, test_positions, residue):
+def findNeighbors(positions, test_atoms, test_positions, residue):
     """Find all amino acids within a cutoff distance of the ligand."""
     mindist2 = np.ones(test_positions.shape[0])*np.inf
     for atom in residue.atoms():
@@ -186,7 +187,7 @@ def saveConformations(outputfile, conformationMap, molMap):
             return
         conformations = [c.m_as(ffunit.nanometers) for c in mol.conformers]
         conformations = [c-np.average(c, axis=0) for c in conformations]
-        group = outputfile.create_group(f'{aaName} {ligandName}')
+        group = outputfile.create_group(f'{ligandName} {aaName}')
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
         ds = group.create_dataset('conformations', data=np.array(conformations), dtype=np.float32)
         ds.attrs['units'] = 'nanometers'
@@ -197,29 +198,14 @@ def saveConformations(outputfile, conformationMap, molMap):
         rdmol = Chem.MolFromSmiles(smiles)
         assert all(atom.GetNumRadicalElectrons() == 0 for atom in rdmol.GetAtoms())
 
+# Load a list of PDB structures that include ligands.
+
 ligandPDB = {}
 for line in open('cc-to-pdb.tdd'):
     ligandPDB[line[:3].upper()] = line[4:8].upper()
 
-outputfile = h5py.File(f'amino-acid-ligand.hdf5', 'w')
-
-for line in open('Components-smiles-oe.smi'):
-    smiles, resid, name = line.split('\t')
-    resid = resid.upper()
-    if resid in app.PDBFile._standardResidues:
-        continue
-    if resid not in ligandPDB:
-        continue
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None:
-        continue
-    if any(a.GetSymbol() not in elements for a in mol.GetAtoms()):
-        continue
-    mol = Chem.AddHs(mol)
-    if any(a.GetNumRadicalElectrons() != 0 or a.GetIsotope() != 0 for a in mol.GetAtoms()):
-        continue
-    if mol.GetNumAtoms() < 5 or mol.GetNumAtoms() > 50:
-        continue
+def processLigand(smiles, resid):
+    """Generate conformations for a ligand."""
     print(f'Generating {smiles}')
     with tempfile.TemporaryDirectory() as tempdir:
         pdbPath = f'{tempdir}/model.pdb'
@@ -237,7 +223,7 @@ for line in open('Components-smiles-oe.smi'):
         for residue in pdb.topology.residues():
             if residue.name == resid:
                 ligandModel = createLigandModel(pdb, residue, ligandPdb)
-                neighbors = findNeighbors(test_atoms, test_positions, residue)
+                neighbors = findNeighbors(positions, test_atoms, test_positions, residue)
                 for neighbor in neighbors:
                     try:
                         model, mol = createModel(pdb, residue, neighbor, ligandModel, forcefield, ligandPdbPath, smiles)
@@ -247,5 +233,35 @@ for line in open('Components-smiles-oe.smi'):
                     except:
                         # This happens when model.pdb and ligand.pdb don't have identical sets of heavy atoms.
                         pass
+        return conformations, mols
+
+# Read the list of ligands, filter them to find ones we want to include, and process them.
+
+futures = []
+with ProcessPoolExecutor() as executor:
+    for line in open('Components-smiles-oe.smi'):
+        smiles, resid, name = line.split('\t')
+        resid = resid.upper()
+        if resid in app.PDBFile._standardResidues:
+            continue
+        if resid not in ligandPDB:
+            continue
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            continue
+        if any(a.GetSymbol() not in elements for a in mol.GetAtoms()):
+            continue
+        mol = Chem.AddHs(mol)
+        if any(a.GetNumRadicalElectrons() != 0 or a.GetIsotope() != 0 for a in mol.GetAtoms()):
+            continue
+        if mol.GetNumAtoms() < 5 or mol.GetNumAtoms() > 45:
+            continue
+        futures.append(executor.submit(processLigand, smiles, resid))
+
+# Save the results to a file.
+
+outputfile = h5py.File(f'amino-acid-ligand.hdf5', 'w')
+for future in futures:
+    conformations, mols = future.result()
     if len(mols) > 0:
         saveConformations(outputfile, conformations, mols)
