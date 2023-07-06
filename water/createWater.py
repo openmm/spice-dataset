@@ -12,10 +12,16 @@ modeller = app.Modeller(app.Topology(), [])
 modeller.addSolvent(app.ForceField('tip3pfb.xml'), boxSize=(2.0, 2.0, 2.0)*unit.nanometers)
 forcefield = app.ForceField('amoeba2018.xml')
 system = forcefield.createSystem(modeller.topology, nonbondedMethod=app.PME, nonbondedCutoff=0.7*unit.nanometers, vdwCutoff=0.9*unit.nanometers, mutualInducedTargetEpsilon=1e-5, polarization='mutual')
+system.addForce(openmm.MonteCarloBarostat(1*unit.bar, 300*unit.kelvin))
 integrator = openmm.LangevinMiddleIntegrator(300*unit.kelvin, 1/unit.picosecond, 0.001*unit.picosecond)
 simulation = app.Simulation(modeller.topology, system, integrator)
 simulation.context.setPositions(modeller.positions)
+
+# Equilibrate for 100 ps.
+
 simulation.minimizeEnergy()
+simulation.context.setVelocitiesToTemperature(300*unit.kelvin)
+simulation.step(100000)
 
 # Simulate it for 10 ns, saving a state every 10 ps.
 
