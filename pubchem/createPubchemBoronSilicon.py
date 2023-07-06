@@ -33,15 +33,19 @@ def filterByRMSD(states, mol):
     return [states[i] for i in finalStates]
 
 def simulate(pos, numbers, charges):
-    atoms = ase.Atoms(positions=pos, numbers=numbers, charges=charges)
-    atoms.calc = XTB(method="GFN-FF")
-    ase.optimize.LBFGS(atoms, logfile=os.devnull).run(0.001, 20)
-    ase.md.velocitydistribution.MaxwellBoltzmannDistribution(atoms, temperature_K=300)
-    dyn = ase.md.langevin.Langevin(atoms, 1*ase.units.fs, temperature_K=300, friction=1e-3)
     states = []
-    for i in range(10):
-        dyn.run(10000)
-        states.append((atoms.get_positions()-np.mean(atoms.get_positions(), axis=0)))
+    try:
+        atoms = ase.Atoms(positions=pos, numbers=numbers, charges=charges)
+        atoms.calc = XTB(method="GFN-FF")
+        ase.optimize.LBFGS(atoms, logfile=os.devnull).run(0.001, 20)
+        ase.md.velocitydistribution.MaxwellBoltzmannDistribution(atoms, temperature_K=300)
+        dyn = ase.md.langevin.Langevin(atoms, 1*ase.units.fs, temperature_K=300, friction=1e-3)
+        for i in range(10):
+            dyn.run(10000)
+            states.append((atoms.get_positions()-np.mean(atoms.get_positions(), axis=0)))
+    except:
+        print('  failed to simulate')
+        pass
     return states
 
 def createConformations(smiles, sid, mol):
@@ -117,5 +121,8 @@ with ProcessPoolExecutor() as executor:
 # Save the results to the output file.
 
 for future in futures:
-    mol, states, sid = future.result()
-    saveToFile(outputfile, mol, states, sid)
+    try:
+        mol, states, sid = future.result()
+        saveToFile(outputfile, mol, states, sid)
+    except:
+        print('  failed to save result')
