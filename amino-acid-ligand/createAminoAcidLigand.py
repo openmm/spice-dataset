@@ -254,7 +254,7 @@ with ProcessPoolExecutor() as executor:
         mol = Chem.AddHs(mol)
         if any(a.GetNumRadicalElectrons() != 0 or a.GetIsotope() != 0 for a in mol.GetAtoms()):
             continue
-        if mol.GetNumAtoms() < 5 or mol.GetNumAtoms() > 45:
+        if mol.GetNumAtoms() < 5 or mol.GetNumAtoms() > 40:
             continue
         futures.append(executor.submit(processLigand, smiles, resid))
 
@@ -262,6 +262,9 @@ with ProcessPoolExecutor() as executor:
 
 outputfile = h5py.File(f'amino-acid-ligand.hdf5', 'w')
 for future in futures:
-    conformations, mols = future.result()
-    if len(mols) > 0:
-        saveConformations(outputfile, conformations, mols)
+    try:
+        conformations, mols = future.result()
+        if len(mols) > 0:
+            saveConformations(outputfile, conformations, mols)
+    except:
+        print('  failed to save result')
