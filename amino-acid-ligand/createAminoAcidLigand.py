@@ -12,9 +12,9 @@ from collections import defaultdict
 from io import StringIO
 from concurrent.futures import ProcessPoolExecutor
 import logging
-import os
 import tempfile
 import urllib.request
+import sys
 
 logging.getLogger().setLevel(logging.ERROR)
 
@@ -76,8 +76,8 @@ def createOpenFFMolecule(topology, aaName, ligandPdbPath, smiles):
         mol.add_bond(bond.atom1_index+offset, bond.atom2_index+offset, bond.bond_order, bond.is_aromatic)
     return mol
 
-def createLigandModel(pdb, ligand, ligandPdb):
-    """Create an OpenMM model for just the ligand."""
+def createLigandCoords(pdb, ligand, ligandPdb):
+    """Find coordinates for just the ligand."""
     # Delete everything except the ligand.
 
     modeller = app.Modeller(pdb.topology, pdb.positions)
@@ -95,7 +95,12 @@ def createLigandModel(pdb, ligand, ligandPdb):
         if a2.element == app.element.hydrogen:
             data.hydrogens.append(app.Modeller._Hydrogen(a2.name, a1.name, np.inf, None, None))
     modeller.addHydrogens()
-    return modeller
+
+    # Reorder the positions to match ligandPdb.
+
+    posMap = dict((atom.name, pos) for atom, pos in zip(modeller.topology.atoms(), modeller.positions))
+    positions = [posMap[atom.name] for atom in ligandPdb.topology.atoms()]
+    return positions
 
 def findNeighbors(positions, test_atoms, test_positions, residue):
     """Find all amino acids within a cutoff distance of the ligand."""
@@ -110,7 +115,7 @@ def findNeighbors(positions, test_atoms, test_positions, residue):
             neighbors.add(test_atoms[i].residue)
     return neighbors
 
-def createModel(pdb, ligand, neighbor, ligandModel, forcefield, ligandPdbPath, smiles):
+def createModel(pdb, ligand, neighbor, ligandTopology, ligandCoords, forcefield, ligandPdbPath, smiles):
     """Create an OpenMM model for the ligand and amino acid."""
     # Delete everything except the ligand and amino acid.
 
@@ -138,7 +143,7 @@ def createModel(pdb, ligand, neighbor, ligandModel, forcefield, ligandPdbPath, s
     # Create both a Molecule and a Topology for the combined system (ligand and amino acid).
 
     mol = createOpenFFMolecule(modeller.topology, neighbor.name, ligandPdbPath, smiles)
-    modeller.add(ligandModel.topology, ligandModel.positions)
+    modeller.add(ligandTopology, ligandCoords)
     return modeller, mol
 
 def createForceField(smiles):
@@ -222,11 +227,11 @@ def processLigand(smiles, resid):
         mols = {}
         for residue in pdb.topology.residues():
             if residue.name == resid:
-                ligandModel = createLigandModel(pdb, residue, ligandPdb)
+                ligandCoords = createLigandCoords(pdb, residue, ligandPdb)
                 neighbors = findNeighbors(positions, test_atoms, test_positions, residue)
                 for neighbor in neighbors:
                     try:
-                        model, mol = createModel(pdb, residue, neighbor, ligandModel, forcefield, ligandPdbPath, smiles)
+                        model, mol = createModel(pdb, residue, neighbor, ligandPdb.topology, ligandCoords, forcefield, ligandPdbPath, smiles)
                         system = createSystem(model, forcefield)
                         conformations[(residue.name, neighbor.name)].append(createConformation(model, system))
                         mols[(residue.name, neighbor.name)] = mol
@@ -237,6 +242,8 @@ def processLigand(smiles, resid):
 
 # Read the list of ligands, filter them to find ones we want to include, and process them.
 
+first = int(sys.argv[1])
+last = int(sys.argv[2])
 futures = []
 with ProcessPoolExecutor() as executor:
     for line in open('Components-smiles-oe.smi'):
@@ -254,13 +261,13 @@ with ProcessPoolExecutor() as executor:
         mol = Chem.AddHs(mol)
         if any(a.GetNumRadicalElectrons() != 0 or a.GetIsotope() != 0 for a in mol.GetAtoms()):
             continue
-        if mol.GetNumAtoms() < 5 or mol.GetNumAtoms() > 40:
+        if mol.GetNumAtoms() < first or mol.GetNumAtoms() > last:
             continue
         futures.append(executor.submit(processLigand, smiles, resid))
 
 # Save the results to a file.
 
-outputfile = h5py.File(f'amino-acid-ligand.hdf5', 'w')
+outputfile = h5py.File(f'amino-acid-ligand-{first}-{last}.hdf5', 'w')
 for future in futures:
     try:
         conformations, mols = future.result()
