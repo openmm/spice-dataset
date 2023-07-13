@@ -61,3 +61,12 @@ https://doi.org/10.1038/s41597-022-01882-6
 
 To cite a particular version of the dataset, cite the Zenodo DOI found on the Releases page and shown above for the
 most recent version.
+
+## Generating New Data
+
+All calculations in the SPICE dataset are computed with [Psi4](https://github.com/psi4/psi4).  If you want to generate
+new data that can be combined with SPICE, it is important to use the same level of theory and the same program with
+identical settings.  Even when two programs use the same level of theory, there usually are enough differences in how
+they do calculations that energies they produce cannot be directly compared to each other.  A
+[sample input file](sample.dat) for Psi4 is provided.  It  shows the exact settings to use to produce new data that can
+be correctly combined with SPICE.

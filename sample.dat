@@ -1,0 +1,32 @@
+memory 180 gb
+psi4_io.set_default_path("/tmp")
+
+
+molecule sample{
+0 1
+S    2.14115412    3.34483413    5.83118474
+S    3.93694189    2.43268204    2.54786115
+C    0.25443274    6.03087160    4.89660178
+C    6.63161588    4.52659328    2.59640792
+H   -0.85733096    6.62095777    6.5580485
+H   -1.06142141    5.53854171    3.35689051
+H    1.42978575    7.63740400    4.27843445
+H    6.06683372    6.53232955    2.5450074
+H    7.81091820    4.21108460    4.28587972
+H    7.77333187    4.11376355    0.90211747
+--
+1 1
+Li   1.41761583   -6.70427585    5.96771769
+units bohr
+symmetry c1
+noreorient
+nocom
+}
+
+set {
+ wcombine false
+ }
+
+props = ['DIPOLE', 'QUADRUPOLE', 'WIBERG_LOWDIN_INDICES', 'MAYER_INDICES']
+gradient('wB97M-D3(BJ)/def2-TZVPPD', properties=props)
+clean()
