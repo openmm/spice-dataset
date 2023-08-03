@@ -115,10 +115,17 @@ for subset in config['subsets']:
         ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float64)
         ds.attrs['units'] = 'hartree'
         for value in config['values']:
-            key = value.lower().replace(' ', '_')
+            altvalue = value.replace(' ', '_')
+            key = altvalue.lower()
             try:
+                data = []
+                for vars in qcvars:
+                    if value in vars:
+                        data.append(vars[value])
+                    else:
+                        data.append(vars[altvalue])
                 dtype = np.float64 if 'energy' in key else np.float32
-                ds = group.create_dataset(key, data=np.array([vars[value] for vars in qcvars]), dtype=dtype)
+                ds = group.create_dataset(key, data=np.array(data), dtype=dtype)
                 if key in units:
                     ds.attrs['units'] = units[key]
             except KeyError:
