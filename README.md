@@ -3,7 +3,8 @@
 This repository contains scripts and data files used in the creation of the SPICE dataset.  It does not contain the
 dataset itself.  That is available from Zenodo:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7606550.svg)](https://doi.org/10.5281/zenodo.7606550)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8222043.svg)](https://doi.org/10.5281/zenodo.8222043)
+
 
 SPICE (Small-Molecule/Protein Interaction Chemical Energies) is a collection of quantum mechanical data for
 training potential functions.  The emphasis is particularly on simulating drug-like small molecules interacting
