@@ -9,3 +9,5 @@ sortMolecules.py reads in the text files, combines them into a single list of mo
 createPubchem.py reads a subset of molecules from the list, generates 50 conformations for each one, and writes them to a HDF5 file.
 
 The conformations were generated using OpenMM 7.6, RDKit 2020.09.3, OpenFF Toolkit 0.10.0, and MDTraj 1.9.5.
+
+The conformations for molecules containing Boron and Silicon were generated with RDKit 2023.03.2, OpenFF Toolkit 0.14.0, and xtb 6.5.1.
