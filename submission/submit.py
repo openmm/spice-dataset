@@ -20,7 +20,6 @@ dataset = client.add_dataset('singlepoint', dataset_name)
 dataset.add_specification('wb97m-d3bj/def2-tzvppd', spec)
 entries = []
 for i, group in enumerate(input_file):
-    print(i, group)
     smiles = input_file[group]['smiles'].asstr()[0]
     conformations = np.array(input_file[group]['conformations'])*scale
     ffmol = openff.toolkit.topology.Molecule.from_mapped_smiles(smiles, allow_undefined_stereo=True)
