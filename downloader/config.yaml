@@ -18,16 +18,16 @@ subsets:
 # out ones you do not want.  Other less common values are also available.  For a full list of available values,
 # and for descriptions of what each one means, see https://psicode.org/psi4manual/1.5.0/glossary_psivariables.html.
 values:
-  - 'DFT TOTAL ENERGY'
-  - 'DFT TOTAL GRADIENT'
-  - 'MBIS CHARGES'
-  - 'MBIS DIPOLES'
-  - 'MBIS QUADRUPOLES'
-  - 'MBIS OCTUPOLES'
-  - 'SCF DIPOLE'
-  - 'SCF QUADRUPOLE'
-  - 'WIBERG LOWDIN INDICES'
-  - 'MAYER INDICES'
+  - 'dft total energy'
+  - 'dft total gradient'
+  - 'mbis charges'
+  - 'mbis dipoles'
+  - 'mbis quadrupoles'
+  - 'mbis octupoles'
+  - 'scf dipole'
+  - 'scf quadrupole'
+  - 'wiberg lowdin indices'
+  - 'mayer indices'
 
 # This specifies a cutoff on forces.  A sample will be skipped if any component of the force on any atom
 # is larger than this value (in hartree/bohr).  Comment out this line to include all samples regardless of
