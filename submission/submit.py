@@ -1,6 +1,7 @@
 from qcportal import PortalClient
 from qcportal.singlepoint import QCSpecification, SinglepointDatasetNewEntry
 from qcportal.molecules import Molecule
+from qcportal.utils import chunk_iterable
 from openmm.unit import nanometer, bohr
 import openff.toolkit
 import numpy as np
@@ -16,8 +17,6 @@ keywords = {'maxiter': 200,
             'scf_properties': ['dipole', 'quadrupole', 'wiberg_lowdin_indices', 'mayer_indices', 'mbis_charges'],
             'wcombine': False}
 spec = QCSpecification(program='psi4', driver='gradient', method='wb97m-d3bj', basis='def2-tzvppd', keywords=keywords)
-dataset = client.add_dataset('singlepoint', dataset_name)
-dataset.add_specification('wb97m-d3bj/def2-tzvppd', spec)
 entries = []
 for i, group in enumerate(input_file):
     smiles = input_file[group]['smiles'].asstr()[0]
@@ -31,5 +30,8 @@ for i, group in enumerate(input_file):
     for i, conformation in enumerate(conformations):
         molecule = Molecule(symbols=symbols, geometry=conformation.flatten(), molecular_charge=total_charge, molecular_multiplicity=multiplicity, identifiers=identifiers, extras=identifiers)
         entries.append(SinglepointDatasetNewEntry(name=f'{group}-{i}', molecule=molecule))
-dataset.add_entries(entries)
+dataset = client.add_dataset('singlepoint', dataset_name)
+dataset.add_specification('wb97m-d3bj/def2-tzvppd', spec)
+for batch in chunk_iterable(entries, 1000):
+    dataset.add_entries(batch)
 dataset.submit(tag='spice-psi4-181')
