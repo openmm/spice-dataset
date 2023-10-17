@@ -1,4 +1,4 @@
-from qcportal import FractalClient
+from qcportal import PortalClient
 from collections import defaultdict
 from rdkit import Chem
 import numpy as np
@@ -61,6 +61,34 @@ def compute_reference_energy(smiles):
         delta = np.sign(total_charge - sum(charge))
     return sum(atom_energy[s][c] for s, c in zip(symbol, charge))
 
+# Assemble the value of a data field from the record properties.
+
+def get_data_value(name, qcvars):
+    altname = name.replace(' ', '_')
+    data = []
+    for vars in qcvars:
+        if name in vars:
+            value = vars[name]
+        else:
+            value = vars[altname]
+        if 'gradient' in name:
+            value = np.reshape(value, [-1, 3])
+        elif 'charges' in name:
+            value = np.reshape(value, [-1, 1])
+        elif 'dipoles' in name:
+            value = np.reshape(value, [-1, 3])
+        elif 'quadrupoles' in name:
+            value = np.reshape(value, [-1, 3, 3])
+        elif 'octupoles' in name:
+            value = np.reshape(value, [-1, 3, 3, 3])
+        elif altname == 'scf_quadrupole':
+            value = np.reshape(value, [3, 3])
+        elif 'indices' in name:
+            atoms = int(np.sqrt(len(value)))
+            value = np.reshape(value, [atoms, atoms])
+        data.append(value)
+    return data
+
 # Process the configuration file and download data.
 
 with open('config.yaml') as input:
@@ -69,35 +97,29 @@ if 'max_force' in config:
     max_force = float(config['max_force'])
 else:
     max_force = None
-client = FractalClient()
+client = PortalClient('https://ml.qcarchive.molssi.org')
 outputfile = h5py.File('SPICE.hdf5', 'w')
 for subset in config['subsets']:
     # Download the next subset.
 
     print('Processing', subset)
-    ds = client.get_collection('Dataset', subset)
-    all_molecules = ds.get_molecules()
-    for row in ds.list_records().iloc:
-        spec = row.to_dict()
-        if spec['method'] == 'wb97m-d3bj':
-            recs = ds.get_records(method=spec['method'], basis=spec['basis'], program=spec['program'], keywords=spec['keywords'])
-            break
+    dataset = client.get_dataset('singlepoint', subset)
+    specifications = [name for name in dataset.specifications if dataset.specifications[name].specification.method == 'wb97m-d3bj']
+    recs = list(dataset.iterate_records(specification_names=specifications))
     recs_by_name = defaultdict(list)
-    mols_by_name = defaultdict(list)
-    for i in range(len(recs)):
-        rec = recs.iloc[i].record
-        if rec is not None and rec.status == 'COMPLETE':
-            index = recs.index[i]
-            name = index[:index.rfind('-')]
-            recs_by_name[name].append(rec)
-            mols_by_name[name].append(all_molecules.loc[index][0])
+    for e, s, r in recs:
+        if r is not None and r.status == 'complete':
+            name = e[:e.rfind('-')]
+            recs_by_name[name].append(r)
+    all_molecules = client.get_molecules([r.molecule_id for e, s, r in recs])
+    mols_by_id = dict((m.id, m) for m in all_molecules)
 
     # Add the data to the HDF5 file.
 
     for name in recs_by_name:
         group_recs = recs_by_name[name]
-        molecules = mols_by_name[name]
-        qcvars = [r.extras['qcvars'] for r in group_recs]
+        molecules = [mols_by_id[r.molecule_id] for r in group_recs]
+        qcvars = [r.properties for r in group_recs]
         smiles = molecules[0].extras['canonical_isomeric_explicit_hydrogen_mapped_smiles']
         ref_energy = compute_reference_energy(smiles)
         name = name.replace('/', '')  # Remove stereochemistry markers that h5py interprets as path separators
@@ -106,24 +128,19 @@ for subset in config['subsets']:
         group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
         group.create_dataset("atomic_numbers", data=molecules[0].atomic_numbers, dtype=np.int16)
         if max_force is not None:
-            force = np.array([vars['DFT TOTAL GRADIENT'] for vars in qcvars])
+            force = np.array([vars['dft total gradient'] for vars in qcvars])
             samples = [i for i in range(len(molecules)) if np.max(np.abs(force[i])) <= max_force]
             molecules = [molecules[i] for i in samples]
             qcvars = [qcvars[i] for i in samples]
         ds = group.create_dataset('conformations', data=np.array([m.geometry for m in molecules]), dtype=np.float32)
         ds.attrs['units'] = 'bohr'
-        ds = group.create_dataset('formation_energy', data=np.array([vars['DFT TOTAL ENERGY']-ref_energy for vars in qcvars]), dtype=np.float64)
+        ds = group.create_dataset('formation_energy', data=np.array([vars['dft total energy']-ref_energy for vars in qcvars]), dtype=np.float64)
         ds.attrs['units'] = 'hartree'
         for value in config['values']:
             altvalue = value.replace(' ', '_')
             key = altvalue.lower()
             try:
-                data = []
-                for vars in qcvars:
-                    if value in vars:
-                        data.append(vars[value])
-                    else:
-                        data.append(vars[altvalue])
+                data = get_data_value(value, qcvars)
                 dtype = np.float64 if 'energy' in key else np.float32
                 ds = group.create_dataset(key, data=np.array(data), dtype=dtype)
                 if key in units:
