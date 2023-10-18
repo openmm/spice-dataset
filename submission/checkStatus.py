@@ -1,5 +1,4 @@
 from qcportal import PortalClient
-from collections import defaultdict
 import sys
 
 dataset_name = sys.argv[1]
