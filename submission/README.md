@@ -7,4 +7,7 @@ files are found in the other directories in this repository.
 `submit.py` takes two arguments: the name of the dataset to create, and the HDF5 file defining the samples.
 
 `checkStatus.py` reports the status of performing the calculations for a dataset.  It takes a single argument, the name
-of the  dataset.
+of the dataset.
+
+`resetErrors.py` resets the status of calculations that have failed so they will be attempted again.  It takes a single
+argument, the name of a dataset.  Any record whose status is "error" is reset to "waiting".
