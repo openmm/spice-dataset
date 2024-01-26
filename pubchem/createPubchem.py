@@ -3,6 +3,7 @@ import openmm.app as app
 import openmm.unit as unit
 from openff.toolkit.typing.engines.smirnoff import ForceField
 from openff.toolkit.topology import Molecule, Topology
+from openff.units import unit as ffunit
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import h5py
@@ -38,7 +39,7 @@ def createConformations(outputfile, forcefield, smiles, sid):
     # Generate 10 diverse starting points.  Run MD from each one to generate a total
     # of 100 high energy conformations.
 
-    mol.generate_conformers(n_conformers=10, rms_cutoff=0*unit.nanometers)
+    mol.generate_conformers(n_conformers=10, rms_cutoff=0*ffunit.nanometers)
     assert len(mol.conformers) == 10
     
     def simulate(pos):
@@ -58,7 +59,7 @@ def createConformations(outputfile, forcefield, smiles, sid):
     futures = []
     with ThreadPoolExecutor() as executor:
         for pos in mol.conformers:
-            futures.append(executor.submit(simulate, pos))
+            futures.append(executor.submit(simulate, pos.to_openmm()))
     states = []
     for future in futures:
         states += future.result()
@@ -93,7 +94,7 @@ def saveToFile(outputfile, mol, states, name):
     except:
         print('  exception generating canonical SMILES')
         return
-    conformations = [c.value_in_unit(unit.nanometers) for c in mol.conformers]
+    conformations = [c.m_as(ffunit.nanometers) for c in mol.conformers]
     conformations = [c-np.average(c, axis=0) for c in conformations]
     group = outputfile.create_group(name)
     group.create_dataset('smiles', data=[smiles], dtype=h5py.string_dtype())
