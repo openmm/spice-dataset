@@ -43,7 +43,7 @@ for spec in specifications:
         new_dataset.print_status()
         exit()
 
-# Remove the records were want to rerun and then submit the dataset again.
+# Remove the records we want to rerun and then submit the dataset again.
 
 rerun_entries = list(set(e for e, s, r in bad_recs))
 rerun_specifications = list(set(s for e, s, r in bad_recs))
