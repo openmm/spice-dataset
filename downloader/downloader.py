@@ -108,7 +108,13 @@ for subset in config['subsets']:
     print('Processing', subset)
     dataset = client.get_dataset('singlepoint', subset)
     specifications = [name for name in dataset.specifications if dataset.specifications[name].specification.method == 'wb97m-d3bj']
-    recs = list(dataset.iterate_records(specification_names=specifications))
+    while True:
+        try:
+            recs = list(dataset.iterate_records(specification_names=specifications))
+            break
+        except Exception as error:
+            print(error)
+            print('Retrying')
     recs_by_name = defaultdict(list)
     for e, s, r in recs:
         if r is not None and r.status == 'complete':
