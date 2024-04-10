@@ -111,6 +111,7 @@ for subset in config['subsets']:
     while True:
         try:
             recs = list(dataset.iterate_records(specification_names=specifications))
+            all_molecules = client.get_molecules([r.molecule_id for e, s, r in recs])
             break
         except Exception as error:
             print(error)
@@ -120,7 +121,6 @@ for subset in config['subsets']:
         if r is not None and r.status == 'complete':
             name = e[:e.rfind('-')]
             recs_by_name[name].append(r)
-    all_molecules = client.get_molecules([r.molecule_id for e, s, r in recs])
     mols_by_id = dict((m.id, m) for m in all_molecules)
 
     # Add the data to the HDF5 file.
