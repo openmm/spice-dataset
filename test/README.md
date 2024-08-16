@@ -8,3 +8,6 @@ conformations for each molecule.
 
 The conformations were generated using OpenMM 8.1.1, RDKit 2023.09.6, OpenFF Toolkit 0.15.2, ASE 3.22.1,
 and xtb 6.5.1.
+
+A second test set consists of 200 ligand/amino-acid dimers with 10 conformations for each one.
+They consist of molecules that are present in the training set, but not in the same combinations.
