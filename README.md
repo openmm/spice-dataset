@@ -58,12 +58,15 @@ conformations, the range of sizes spanned by the molecules/clusters, and the lis
 
 ## Citing The Dataset
 
-Please cite this manuscript for papers that use the SPICE dataset:
+Please cite these manuscripts for papers that use the SPICE dataset:
 
 Peter Eastman, Pavan Kumar Behara, David L. Dotson, Raimondas Galvelis, John E. Herr, Josh T. Horton, Yuezhi Mao,
 John D. Chodera, Benjamin P. Pritchard, Yuanqing Wang, Gianni De Fabritiis, and Thomas E. Markland.  "SPICE, A Dataset
 of Drug-like Molecules and Peptides for Training Machine Learning Potentials."  Scientific Data 10, 11 (2023).
 https://doi.org/10.1038/s41597-022-01882-6
+
+Peter Eastman, Benjamin P. Pritchard, John D. Chodera, Thomas E. Markland.  "Nutmeg and SPICE: Models and Data for
+Biomolecular Machine Learning."  J. Chem. Theory Comput. 20, 19, 8583-8593 (2024).  https://doi.org/10.1021/acs.jctc.4c00794
 
 To cite a particular version of the dataset, cite the Zenodo DOI found on the Releases page and shown above for the
 most recent version.
