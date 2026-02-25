@@ -52,7 +52,12 @@ def createOpenFFMolecule(topology, aaName, ligandPdbPath, smiles):
     mol = Molecule.from_smiles(aminoAcidSmiles[aaName], allow_undefined_stereo=True)
     mol2 = Molecule()
     for atom in topology.atoms():
-        mol2.add_atom(atom.element.atomic_number, 0, False, name=atom.name)
+        charge = 0
+        if (atom.residue.name, atom.name) in [('HIS', 'ND1'), ('LYS', 'NZ'), ('ARG', 'NH2')]:
+            charge = 1
+        if (atom.residue.name, atom.name) in [('ASP', 'OD2'), ('GLU', 'OE2')]:
+            charge = -1
+        mol2.add_atom(atom.element.atomic_number, charge, False, name=atom.name)
     for a1, a2 in topology.bonds():
         mol2.add_bond(a1.index, a2.index, 1, False)
     isomorphic, mapping = Molecule.are_isomorphic(mol, mol2,
@@ -170,7 +175,7 @@ def createSystem(model, forcefield):
 def createConformation(model, system):
     """Create a single conformation for the model."""
     integrator = openmm.LangevinMiddleIntegrator(300*unit.kelvin, 10/unit.picosecond, 0.001*unit.picosecond)
-    simulation = app.Simulation(model.topology, system, integrator)
+    simulation = app.Simulation(model.topology, system, integrator, openmm.Platform.getPlatform('Reference'))
     simulation.context.setPositions(model.positions)
     simulation.minimizeEnergy()
     forces = simulation.context.getState(getForces=True).getForces(asNumpy=True).value_in_unit(unit.kilojoules_per_mole/unit.nanometer)
@@ -224,8 +229,10 @@ def processLigand(smiles, resid):
     with tempfile.TemporaryDirectory() as tempdir:
         pdbPath = f'{tempdir}/model.pdb'
         ligandPdbPath = f'{tempdir}/ligand.pdb'
-        urllib.request.urlretrieve(f'http://ligand-expo.rcsb.org/reports/{resid[0]}/{resid}/{resid}_model.pdb', ligandPdbPath)
-        ligandPdb = app.PDBFile(ligandPdbPath)
+        fixer = pdbfixer.PDBFixer('mol.pdb') # The file doesn't matter, just used to download templates.
+        fixer.downloadTemplate(resid)
+        ligandPdb = fixer._getTemplate(resid)
+        app.PDBFile.writeFile(ligandPdb.topology, ligandPdb.positions, ligandPdbPath)
         conformations = defaultdict(list)
         mols = {}
         counts = defaultdict(int)
@@ -256,7 +263,7 @@ def processLigand(smiles, resid):
                             counts[neighbor.name] += 1
                             model, mol = createModel(pdb, residue, neighbor, ligandPdb.topology, ligandCoords, forcefield, ligandPdbPath, smiles)
                             system = createSystem(model, forcefield)
-                            key = (residue.name, neighbor.name)
+                            key = (residue.name, neighbor.name)+tuple([atom.name for atom in model.topology.atoms()])
                             conformations[key].append(createConformation(model, system))
                             mols[key] = mol
                             if len(conformations[key]) == 10:
